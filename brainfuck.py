@@ -49,6 +49,7 @@ def evaluate(code):
   bracemap = buildbracemap(code)
 
   cells, codeptr, cellptr = [0], 0, 0
+  result = ""
 
   while codeptr < len(code):
     command = code[codeptr]
@@ -68,10 +69,10 @@ def evaluate(code):
 
     if command == "[" and cells[cellptr] == 0: codeptr = bracemap[codeptr]
     if command == "]" and cells[cellptr] != 0: codeptr = bracemap[codeptr]
-    if command == ".": sys.stdout.write(chr(cells[cellptr]))
+    if command == ".": result = result + chr(cells[cellptr])
     if command == ",": cells[cellptr] = ord(getch.getch())
-      
     codeptr += 1
+  return result
 
 
 def cleanup(code):
