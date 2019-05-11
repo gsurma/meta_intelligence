@@ -6,37 +6,8 @@
 
 import sys
 
-class _Getch:
-    def __init__(self):
-        try:
-            self.impl = _GetchWindows()
-        except ImportError:
-            self.impl = _GetchUnix()
 
-    def __call__(self): return self.impl()
-
-class _GetchUnix:
-    def __init__(self):
-        import tty, sys
-
-    def __call__(self):
-        import sys, tty, termios
-        fd = sys.stdin.fileno()
-        old_settings = termios.tcgetattr(fd)
-        try:
-            tty.setraw(sys.stdin.fileno())
-            ch = sys.stdin.read(1)
-        finally:
-            termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
-        return ch
-
-class _GetchWindows:
-    def __init__(self):
-        import msvcrt
-
-    def __call__(self):
-        import msvcrt
-        return msvcrt.getch()
+OPERATIONS_LIMIT = 1000
 
 def execute(filename):
   f = open(filename, "r")
@@ -50,8 +21,12 @@ def evaluate(code):
 
   cells, codeptr, cellptr = [0], 0, 0
   result = ""
+  operations = 0
 
-  while codeptr < len(code):
+  if bracemap is None:
+    return result
+
+  while codeptr < len(code) and operations < OPERATIONS_LIMIT:
     command = code[codeptr]
 
     if command == ">":
@@ -67,17 +42,22 @@ def evaluate(code):
     if command == "-":
       cells[cellptr] = cells[cellptr] - 1 if cells[cellptr] > 0 else 255
 
-    if command == "[" and cells[cellptr] == 0: codeptr = bracemap[codeptr]
-    if command == "]" and cells[cellptr] != 0: codeptr = bracemap[codeptr]
-    if command == ".": result = result + chr(cells[cellptr])
-    if command == ",": cells[cellptr] = ord(getch.getch())
-    codeptr += 1
-  return result
+    if command == "[" and cells[cellptr] == 0 and codeptr in bracemap:
+      codeptr = bracemap[codeptr]
 
+    if command == "]" and cells[cellptr] != 0 and codeptr in bracemap:
+      codeptr = bracemap[codeptr]
+
+    if command == ".":
+      result = result + chr(cells[cellptr])
+    if command == ",":
+      pass#cells[cellptr] = ord(getch.getch())
+    codeptr += 1
+    operations += 1
+  return result
 
 def cleanup(code):
   return ''.join(filter(lambda x: x in ['.', ',', '[', ']', '<', '>', '+', '-'], code))
-
 
 def buildbracemap(code):
   temp_bracestack, bracemap = [], {}
@@ -85,15 +65,19 @@ def buildbracemap(code):
   for position, command in enumerate(code):
     if command == "[": temp_bracestack.append(position)
     if command == "]":
-      start = temp_bracestack.pop()
-      bracemap[start] = position
-      bracemap[position] = start
+      if len(temp_bracestack) > 0:
+        start = temp_bracestack.pop()
+        bracemap[start] = position
+        bracemap[position] = start
+      else:
+        return None
   return bracemap
 
-
 def main():
-  if len(sys.argv) == 2: execute(sys.argv[1])
-  else: print("Usage:", sys.argv[0], "filename")
+  if len(sys.argv) == 2:
+    execute(sys.argv[1])
+  else: 
+    print("Usage:", sys.argv[0], "filename")
 
 if __name__ == "__main__": main()
 
