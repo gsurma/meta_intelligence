@@ -31,7 +31,7 @@ def evaluate(code):
 	operations = 0
 
 	if bracemap is None:
-		return result
+		return None
 
 	while codeptr < len(code) and operations < OPERATIONS_LIMIT:
 		command = code[codeptr]

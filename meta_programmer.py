@@ -17,7 +17,7 @@ from statistics import mean
 
 ASCII_CHARS_COUNT = 256
 POPULATION = 1000
-MUTATION_RATE = 0.01
+MUTATION_RATE = 0.05
 SELECTION_RATE = 0.8
 PARENTS_COUNT = int(POPULATION * SELECTION_RATE)
 
@@ -31,16 +31,17 @@ class MetaProgrammer():
 
 	target = ""
 	generation = 0
+	population = []
 
 	def __init__(self, target):
 		self.target = target
 
 		#chromosome = "+[----->+++<]>+.+." #hi
-		# chromosome = "]]-+,--><.,[>" #478
+		# chromosome = "++[++++++++++++++++++,++<+++++++++++++++++[+++[+<+++++[+++++++++++>++++++++<+++++][[<<+<>,.+.<<><<." #478
 		# result = brainfuck.evaluate(chromosome)
 		# print(len(chromosome))
 		# print(result)
-		# score = self.fitness_string(chromosome, self.target)
+		# score = self.fitness_string(result, self.target)
 		# print(score)
 		# exit()
 
@@ -48,34 +49,38 @@ class MetaProgrammer():
 
 
 	def genetic_evolution(self):
-		population = self.generate_initial_population()
-		while self.should_keep_evolving(population):
-			print("generation: " + str(self.generation) + ", population: " + str(len(population)) + ", mutation_rate: " + str(MUTATION_RATE))
+		self.population = self.generate_population(self.population)
+		while self.should_keep_evolving(self.population):
+			print("generation: " + str(self.generation) + ", population: " + str(len(self.population)) + ", mutation_rate: " + str(MUTATION_RATE))
 
 			# 1. Selection
-			parents = self.strongest_parents(population)
+			parents = self.strongest_parents(self.population)
 
 			# 2. Crossover (Roulette selection)
-			pairs = []
-			while len(pairs) != POPULATION:
-			    pairs.append(self.pair(parents))
+			pairs = self.generate_pairs(parents)
 
 			base_offsprings = []
 			for pair in pairs:
 				offsprings = self.crossover(pair[0][0], pair[1][0])
 				base_offsprings.append(offsprings[0])
 
-			# # 3. Mutation
-			new_population = self.mutation(base_offsprings)
-			population = new_population
+			# 3. Mutation
+			mutated_population = self.mutation(base_offsprings)
+			
+			# 4. Validation
+			valid_population = []
+			for chromosome in mutated_population:
+				if brainfuck.evaluate(chromosome) is not None:
+					valid_population.append(chromosome)
+			self.population = self.generate_population(valid_population)
 			self.generation += 1
 
 	def should_keep_evolving(self, population):
-		for chromosome in population:
+		for i in range(0, len(population)):
+			chromosome = population[i]
 			result = brainfuck.evaluate(chromosome)
-			print("chromosome: " + chromosome + ", result: " + result + ", score: " + str(self.fitness_string(chromosome, self.target)))
 			if result == self.target:
-				print("FOUND SOLUTION: " + chromosome + " for: " + target)
+				print("FOUND SOLUTION: " + chromosome + " for: " + self.target)
 				return False
 		return True
 
@@ -85,11 +90,14 @@ class MetaProgrammer():
 			offspring_mutation = copy.deepcopy(offspring)
 			for i in range(0, len(offspring_mutation)):
 				if np.random.choice([True, False], p=[MUTATION_RATE, 1-MUTATION_RATE]):
-					offspring_mutation = self.set_value_at_index(offspring_mutation, random.choice(AVAILABLE_OPS), i)
-					# print("before: ", offspring)
-					# print("after: ", offspring_mutation)
-					# exit()
-					offsprings.append(offspring_mutation)		
+					action_type = random.randint(0, 2)
+					if action_type == 0 and len(offspring_mutation) < PROGRAM_LENGTH_UPPER_BOUND: #Adding random value at index
+						offspring_mutation = offspring_mutation[:i] + random.choice(AVAILABLE_OPS) + offspring_mutation[i:]
+					elif action_type == 1 and len(offspring_mutation) > PROGRAM_LENGTH_LOWER_BOUND: # Removing value at index
+						offspring_mutation = offspring_mutation[:i] + offspring_mutation[i+1:]
+					else: #Setting random value at index
+						offspring_mutation = self.set_value_at_index(offspring_mutation, random.choice(AVAILABLE_OPS), i)
+			offsprings.append(offspring_mutation)		
 		return offsprings
 
 	def crossover(self, x, y):
@@ -123,63 +131,86 @@ class MetaProgrammer():
 		try:
 			return string[i]
 		except IndexError:
-			return ""
+			return None
 
 	def set_value_at_index(self, string, value, i):
 		if i > len(string):
-			return string + value # TODO: maybe just pass?
-		else:
+			return string
+		elif value is not None:
 			return string[:i] + value + string[i+1:]
+		else:
+			return string
 
 	def strongest_parents(self, population):
 		scores_for_chromosomes = []
 		for i in range(0, len(population)):
 			chromosome = population[i]
-			scores_for_chromosomes.append((chromosome, self.fitness_string(chromosome, self.target)))
+			result = brainfuck.evaluate(chromosome)
+			scores_for_chromosomes.append((chromosome, self.fitness_string(result, self.target)))
 		scores_for_chromosomes.sort(key=lambda x: x[1])
 		print("population: " + str(mean([x[1] for x in scores_for_chromosomes])))
 
 		top_performers = scores_for_chromosomes[-PARENTS_COUNT:]
 		top_scores = [x[1] for x in top_performers]
-		print("top " + str(SELECTION_RATE) + ": " + "(min: " + str(min(top_scores)) + ", avg: " + str(mean(top_scores)) + ", max: " + str(max(top_scores)) + ")")
+		print("elite " + str(SELECTION_RATE) + ": " + "(min: " + str(min(top_scores)) + ", avg: " + str(mean(top_scores)) + ", max: " + str(max(top_scores)) + ")")
+		chromosome = top_performers[-1][0]
+		result = brainfuck.evaluate(chromosome)
+		print("top chromosome: " + chromosome + ", result: " + result + ", score: " + str(self.fitness_string(result, self.target)))
 		print("")
 		return top_performers
 
-	def generate_initial_population(self):
-		population = []
+	def generate_population(self, population):
 		while len(population) < POPULATION:
-			length = random.randint(1, PROGRAM_LENGTH_UPPER_BOUND)
+			length = random.randint(PROGRAM_LENGTH_LOWER_BOUND, PROGRAM_LENGTH_UPPER_BOUND)
 			chromosome = ""
 			for i in range(0, length):
 				chromosome += random.choice(AVAILABLE_OPS)
-			if brainfuck.evaluate(chromosome) != "": # We don't want programs that are syntactically incorrect
+			if brainfuck.evaluate(chromosome) is not None and chromosome not in population: # We don't want programs that are syntactically incorrect
 				population.append(chromosome)
 		return population
 
-	def pair(self, parents):
-		total_parents_score = sum([x[1] for x in parents])
+	def pair(self, parents, softmax_parents, total_parents_score):
 		pick_parent_a = random.uniform(0, total_parents_score)
 		pick_parent_b = random.uniform(0, total_parents_score)
-		return [self.roulette_selection(parents, pick_parent_a), self.roulette_selection(parents, pick_parent_b)]
+		return [self.roulette_selection(parents, softmax_parents, pick_parent_a), self.roulette_selection(parents, softmax_parents, pick_parent_b)]
 
-	def roulette_selection(self, parents, pick):
-		current = 0
-		for parent in parents:
-			current += parent[1]
+	def generate_pairs(self, parents):
+		softmax_parents = self.softmax([x[1] for x in parents])
+		total_parents_score = sum(softmax_parents)
+		pairs = []
+		while len(pairs) != POPULATION:
+			pair = self.pair(parents, softmax_parents, total_parents_score)
+			if len(pair) == 2 and pair[0] is not None and pair[1] is not None:
+				pairs.append(pair)
+		return pairs
+
+	def softmax(self, x):
+		return np.exp(x) / np.sum(np.exp(x), axis=0)
+
+	def roulette_selection(self, parents, softmax_parents, pick):
+		current = 0.0
+		for i in range(0, len(parents)):
+			current += softmax_parents[i]
 			if current > pick:
-				return parent
+				return parents[i]
 
-	def fitness_string(self, input, target):
+	def fitness_string(self, input_string, target):
 		fitness_score = 0
-		for i, c in enumerate(input):
+		for i, c in enumerate(input_string):
 			input_score = ord(c)
 			if len(target) > i:
 				target_score = ord(target[i])
 				score = ASCII_CHARS_COUNT-abs(input_score-target_score)
-			else:
-				score = -1
 			fitness_score += score
-		return fitness_score	
+
+		length_delta = abs(len(target)-len(input_string))
+		for _ in range(0, length_delta):
+			fitness_score -= ASCII_CHARS_COUNT
+		# print(repr(input_string))
+		# print(len(input_string))
+		# print(fitness_score)
+		# exit()
+		return fitness_score
 
 def main():
 	MetaProgrammer("hi")
