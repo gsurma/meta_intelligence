@@ -50,17 +50,23 @@ def evaluate(code):
 		if command == "-":
 			cells[cellptr] = cells[cellptr] - 1 if cells[cellptr] > 0 else 255
 
-		if command == "[" and cells[cellptr] == 0 and codeptr in bracemap:
-			codeptr = bracemap[codeptr]
+		if command == "[" and cells[cellptr] == 0:
+			if codeptr not in bracemap:
+				return None
+			else:
+				codeptr = bracemap[codeptr]
 
-		if command == "]" and cells[cellptr] != 0 and codeptr in bracemap:
-			codeptr = bracemap[codeptr]
+		if command == "]" and cells[cellptr] != 0:
+			if codeptr not in bracemap:
+				return None
+			else:
+				codeptr = bracemap[codeptr]
 
 		if command == ".":
 			result = result + chr(cells[cellptr])
 
 		if command == ",":
-			pass # we don't accept additional inputs, let's skip
+			return None # we don't accept additional inputs, let's skip
 		codeptr += 1
 		operations += 1
 	return result
@@ -70,17 +76,22 @@ def cleanup(code):
 
 def buildbracemap(code):
 	temp_bracestack, bracemap = [], {}
-
+	braces_count = 0
 	for position, command in enumerate(code):
 		if command == "[":
+			braces_count += 1
 			temp_bracestack.append(position)
 		if command == "]":
+			braces_count += 1
 			if len(temp_bracestack) > 0:
 				start = temp_bracestack.pop()
 				bracemap[start] = position
 				bracemap[position] = start
 			else:
 				return None
+
+	if braces_count != len(bracemap):
+		return None
 	return bracemap
 
 def main():

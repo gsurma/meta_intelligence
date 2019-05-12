@@ -14,17 +14,18 @@ import random
 import copy
 import numpy as np
 from statistics import mean
+import sys
 
 ASCII_CHARS_COUNT = 256
 POPULATION = 1000
-MUTATION_RATE = 0.05
+MUTATION_RATE = 0.1
 SELECTION_RATE = 0.8
 PARENTS_COUNT = int(POPULATION * SELECTION_RATE)
 
 PROGRAM_LENGTH_LOWER_BOUND = 10
 PROGRAM_LENGTH_UPPER_BOUND = 100
 
-AVAILABLE_OPS = [">", "<", "+", "-", ".", ",", "[", "]"]
+AVAILABLE_OPS = [">", "<", "+", "-", ".", "[", "]"] #","
 
 
 class MetaProgrammer():
@@ -58,16 +59,15 @@ class MetaProgrammer():
 
 			# 2. Crossover (Roulette selection)
 			pairs = self.generate_pairs(parents)
-
-			base_offsprings = []
+			selected_offsprings = []
 			for pair in pairs:
 				offsprings = self.crossover(pair[0][0], pair[1][0])
-				base_offsprings.append(offsprings[0])
+				selected_offsprings.append(offsprings[0])
 
 			# 3. Mutation
-			mutated_population = self.mutation(base_offsprings)
+			mutated_population = self.mutation(selected_offsprings)
 			
-			# 4. Validation
+			#4. Validation (We don't want syntactically incorrect programs)
 			valid_population = []
 			for chromosome in mutated_population:
 				if brainfuck.evaluate(chromosome) is not None:
@@ -84,9 +84,9 @@ class MetaProgrammer():
 				return False
 		return True
 
-	def mutation(self, base_offsprings):
+	def mutation(self, selected_offsprings):
 		offsprings = []
-		for offspring in base_offsprings:
+		for offspring in selected_offsprings:
 			offspring_mutation = copy.deepcopy(offspring)
 			for i in range(0, len(offspring_mutation)):
 				if np.random.choice([True, False], p=[MUTATION_RATE, 1-MUTATION_RATE]):
@@ -165,7 +165,7 @@ class MetaProgrammer():
 			chromosome = ""
 			for i in range(0, length):
 				chromosome += random.choice(AVAILABLE_OPS)
-			if brainfuck.evaluate(chromosome) is not None and chromosome not in population: # We don't want programs that are syntactically incorrect
+			if brainfuck.evaluate(chromosome) is not None: # We don't want programs that are syntactically incorrect
 				population.append(chromosome)
 		return population
 
@@ -184,8 +184,13 @@ class MetaProgrammer():
 				pairs.append(pair)
 		return pairs
 
+	# def softmax(self, x):
+	# 	return np.exp(x) / np.sum(np.exp(x), axis=0)
+
 	def softmax(self, x):
-		return np.exp(x) / np.sum(np.exp(x), axis=0)
+		b = np.max(x)
+		y = np.exp(x - b)
+		return y / y.sum()
 
 	def roulette_selection(self, parents, softmax_parents, pick):
 		current = 0.0
@@ -211,9 +216,10 @@ class MetaProgrammer():
 		# print(fitness_score)
 		# exit()
 		return fitness_score
-
-def main():
-	MetaProgrammer("hi")
-
+	
 if __name__ == "__main__":
-	main()
+	if len(sys.argv) == 2:
+		MetaProgrammer(str(sys.argv[1]))
+	else: 
+		print("Usage:", sys.argv[0], "text to find")
+	
