@@ -22,7 +22,6 @@ def execute(filename):
 	evaluate(f.read())
 	f.close()
 
-
 def evaluate(code):
 	code = cleanup(list(code))
 	bracemap = buildbracemap(code)
