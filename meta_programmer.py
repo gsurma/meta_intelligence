@@ -9,7 +9,7 @@
 
 # https://copy.sh/brainfuck/text.html
 
-import brainfuck
+import brainfuck2 as brainfuck
 import random
 import copy
 import numpy as np
@@ -19,7 +19,7 @@ import sys
 ASCII_CHARS_COUNT = 256
 POPULATION = 1000
 MUTATION_RATE = 0.1
-SELECTION_RATE = 0.8
+SELECTION_RATE = 0.9
 PARENTS_COUNT = int(POPULATION * SELECTION_RATE)
 
 PROGRAM_LENGTH_LOWER_BOUND = 10
@@ -33,25 +33,23 @@ class MetaProgrammer():
 	target = ""
 	generation = 0
 	population = []
+	max_fitness_score = 0
 
 	def __init__(self, target):
 		self.target = target
+		self.max_fitness_score = len(self.target)*ASCII_CHARS_COUNT
 
-		#chromosome = "+[----->+++<]>+.+." #hi
-		# chromosome = "++[++++++++++++++++++,++<+++++++++++++++++[+++[+<+++++[+++++++++++>++++++++<+++++][[<<+<>,.+.<<><<." #478
+		# chromosome = "+[----->+++<]>+.+." #hi
 		# result = brainfuck.evaluate(chromosome)
-		# print(len(chromosome))
 		# print(result)
 		# score = self.fitness_string(result, self.target)
 		# print(score)
 		# exit()
-
 		self.genetic_evolution()
-
 
 	def genetic_evolution(self):
 		self.population = self.generate_population(self.population)
-		while self.should_keep_evolving(self.population):
+		while True:
 			print("generation: " + str(self.generation) + ", population: " + str(len(self.population)) + ", mutation_rate: " + str(MUTATION_RATE))
 
 			# 1. Selection
@@ -74,15 +72,6 @@ class MetaProgrammer():
 					valid_population.append(chromosome)
 			self.population = self.generate_population(valid_population)
 			self.generation += 1
-
-	def should_keep_evolving(self, population):
-		for i in range(0, len(population)):
-			chromosome = population[i]
-			result = brainfuck.evaluate(chromosome)
-			if result == self.target:
-				print("FOUND SOLUTION: " + chromosome + " for: " + self.target)
-				return False
-		return True
 
 	def mutation(self, selected_offsprings):
 		offsprings = []
@@ -146,7 +135,11 @@ class MetaProgrammer():
 		for i in range(0, len(population)):
 			chromosome = population[i]
 			result = brainfuck.evaluate(chromosome)
-			scores_for_chromosomes.append((chromosome, self.fitness_string(result, self.target)))
+			score = self.fitness_string(result, self.target)
+			if score == self.max_fitness_score:
+				print("FOUND SOLUTION: " + chromosome + " for: " + self.target)
+				exit()
+			scores_for_chromosomes.append((chromosome, score))
 		scores_for_chromosomes.sort(key=lambda x: x[1])
 		print("population: " + str(mean([x[1] for x in scores_for_chromosomes])))
 
@@ -155,7 +148,7 @@ class MetaProgrammer():
 		print("elite " + str(SELECTION_RATE) + ": " + "(min: " + str(min(top_scores)) + ", avg: " + str(mean(top_scores)) + ", max: " + str(max(top_scores)) + ")")
 		chromosome = top_performers[-1][0]
 		result = brainfuck.evaluate(chromosome)
-		print("top chromosome: " + chromosome + ", result: " + result + ", score: " + str(self.fitness_string(result, self.target)))
+		print("top: " + chromosome + ", result: " + result + ", score: " + str(self.fitness_string(result, self.target)))
 		print("")
 		return top_performers
 
@@ -184,9 +177,6 @@ class MetaProgrammer():
 				pairs.append(pair)
 		return pairs
 
-	# def softmax(self, x):
-	# 	return np.exp(x) / np.sum(np.exp(x), axis=0)
-
 	def softmax(self, x):
 		b = np.max(x)
 		y = np.exp(x - b)
@@ -205,11 +195,9 @@ class MetaProgrammer():
 			input_score = ord(c)
 			if len(target) > i:
 				target_score = ord(target[i])
-				score = ASCII_CHARS_COUNT-abs(input_score-target_score)
-			fitness_score += score
-
-		length_delta = abs(len(target)-len(input_string))
-		for _ in range(0, length_delta):
+				fitness_score += ASCII_CHARS_COUNT-abs(input_score-target_score)
+		length_diff = abs(len(target)-len(input_string))
+		for _ in range(0, length_diff):
 			fitness_score -= ASCII_CHARS_COUNT
 		# print(repr(input_string))
 		# print(len(input_string))

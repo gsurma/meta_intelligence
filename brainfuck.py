@@ -16,6 +16,8 @@
 import sys
 
 OPERATIONS_LIMIT = 1000 # Necessary to prevent halting
+CELLS = 30000
+
 
 def execute(filename):
 	f = open(filename, "r")
@@ -24,7 +26,7 @@ def execute(filename):
 
 def evaluate(code):
 	code = cleanup(list(code))
-	bracemap = buildbracemap(code)
+	bracemap = build_bracemap(code)
 
 	cells, codeptr, cellptr = [0], 0, 0
 	result = ""
@@ -33,22 +35,32 @@ def evaluate(code):
 	if bracemap is None:
 		return None
 
-	while codeptr < len(code) and operations < OPERATIONS_LIMIT:
+	while codeptr < len(code):
+		if operations >= OPERATIONS_LIMIT:
+			return None
 		command = code[codeptr]
 
 		if command == ">":
 			cellptr += 1
-			if cellptr == len(cells):
-		   		cells.append(0)
+			if len(cells) <= cellptr:
+				cells.append(0)
+			# if cellptr == len(cells):
+		 #   		cells.append(0)
 
 		if command == "<":
 			cellptr = 0 if cellptr <= 0 else cellptr - 1
 
+		# if command == "+":
+		# 	cells[cellptr] = cells[cellptr] + 1 if cells[cellptr] < CELLS else 0
+
+		# if command == "-":
+		# 	cells[cellptr] = cells[cellptr] - 1 if cells[cellptr] > 0 else CELLS
+
 		if command == "+":
-			cells[cellptr] = cells[cellptr] + 1 if cells[cellptr] < 255 else 0
+			cells[cellptr] = cells[cellptr] + 1 
 
 		if command == "-":
-			cells[cellptr] = cells[cellptr] - 1 if cells[cellptr] > 0 else 255
+			cells[cellptr] = cells[cellptr] - 1 if cells[cellptr] > 0 else 0
 
 		if command == "[" and cells[cellptr] == 0:
 			if codeptr not in bracemap:
@@ -63,10 +75,11 @@ def evaluate(code):
 				codeptr = bracemap[codeptr]
 
 		if command == ".":
-			result = result + chr(cells[cellptr])
+			result += chr(cells[cellptr])
 
 		if command == ",":
 			return None # we don't accept additional inputs, let's skip
+
 		codeptr += 1
 		operations += 1
 	return result
@@ -74,7 +87,7 @@ def evaluate(code):
 def cleanup(code):
 	return ''.join(filter(lambda x: x in ['.', ',', '[', ']', '<', '>', '+', '-'], code))
 
-def buildbracemap(code):
+def build_bracemap(code):
 	temp_bracestack, bracemap = [], {}
 	braces_count = 0
 	for position, command in enumerate(code):
@@ -89,17 +102,19 @@ def buildbracemap(code):
 				bracemap[position] = start
 			else:
 				return None
-
+	# print(bracemap)
+	# print(braces_count)
+	# TODO: fix
+	#https://gist.github.com/unnikked/cfad836abd9e4619a1b1
+	#https://github.com/praharshjain/brainfuck-interpreter/blob/master/brainfuck_interpreter.py
+	#https://codereview.stackexchange.com/questions/134578/a-brainfuck-interpreter-in-python-3
 	if braces_count != len(bracemap):
 		return None
 	return bracemap
 
-def main():
+if __name__ == "__main__":
 	if len(sys.argv) == 2:
 		execute(sys.argv[1])
 	else: 
 		print("Usage:", sys.argv[0], "filename")
-
-if __name__ == "__main__":
-	main()
 
