@@ -1,7 +1,7 @@
 
 import sys
 
-OPERATIONS_LIMIT = 1000 # necessary to prevent halting
+OPERATIONS_LIMIT = 10000 # necessary to prevent halting
 
 def execute(filename):
     f = open(filename, "r")
@@ -14,6 +14,8 @@ def evaluate(code):
     return run(code)
 
 def set_cell_value(value, cells, cell_ptr):
+    # print(len(cells))
+    # print(cell_ptr)
     cells[cell_ptr] += value
     if cells[cell_ptr] > 255:
         cells[cell_ptr] = 0
@@ -24,8 +26,8 @@ def set_cell_value(value, cells, cell_ptr):
 def cleanup(code):
     return ''.join(filter(lambda x: x in ['.', ',', '[', ']', '<', '>', '+', '-'], code))
 
-def is_in_collection(item, collection):
-    return True if item in collection else False
+def is_index_in_collection(index, collection):
+    return True if index < len(collection) and index >= 0 else False
 
 def pair_brackets(code):
     open_bracket_indexes = []
@@ -50,30 +52,34 @@ def pair_brackets(code):
 
 def run(code):
     operations = 0
-    cells = [0]
+    cells = [0] #*30000
     cell_ptr = 0
     src_ptr = 0
     result = ""
 
     brackets = pair_brackets(code)
     if not brackets:
+        #print("No brackets")
         return None
     open_bracket_indexes = brackets[0]
     close_bracket_indexes = brackets[1]
 
     while src_ptr < len(code):
         if operations >= OPERATIONS_LIMIT:
+            #print("halt!")
             return None
 
         command = code[src_ptr]
 
         if command == '+':
-            if not is_in_collection(cell_ptr, cells):
-                return None
+            if not is_index_in_collection(cell_ptr, cells):
+                #print("cell_ptr not in cells for +")
+                return None 
             cells, cell_ptr = set_cell_value(1, cells, cell_ptr)
 
         elif command == '-':
-            if not is_in_collection(cell_ptr, cells):
+            if not is_index_in_collection(cell_ptr, cells):
+                #print("cell_ptr not in cells for -")
                 return None
             cells, cell_ptr = set_cell_value(-1, cells, cell_ptr)
 
@@ -86,16 +92,19 @@ def run(code):
                 cells.append(0)
 
         elif command == '[' or command == ']':
-            if not is_in_collection(cell_ptr, cells):
+            if not is_index_in_collection(cell_ptr, cells):
+                #print("cell_ptr not in cells for [ or ]")
                 return None
             if command == '[' and cells[cell_ptr] == 0:
-                if not is_in_collection(src_ptr, open_bracket_indexes):
-                    return None
+                # if not src_ptr in open_bracket_indexes:
+                #     print("src_ptr not in open_bracket_indexes for [")
+                #     return None
                 index = open_bracket_indexes.index(src_ptr)
                 src_ptr =  close_bracket_indexes[index]
             elif command == ']' and cells[cell_ptr] != 0:
-                if not is_in_collection(src_ptr, close_bracket_indexes):
-                    return None
+                # if not src_ptr in close_bracket_indexes:
+                #     print("src_ptr not in close_bracket_indexes for ]")
+                #     return None
                 index = close_bracket_indexes.index(src_ptr)
                 src_ptr = open_bracket_indexes[index]
 
@@ -103,8 +112,10 @@ def run(code):
             return None # No inputs as for now
 
         elif command == '.':
-            if not is_in_collection(cell_ptr, cells):
+            if not is_index_in_collection(cell_ptr, cells):
+                #print("cell_ptr not in cells for .")
                 return None
+            #new_char = chr(item_from_collection_at_index(cells, cell_ptr))
             new_char = chr(cells[cell_ptr])
             result += new_char
 
@@ -116,4 +127,4 @@ if __name__ == '__main__':
     if len(sys.argv) == 2:
         execute(sys.argv[1])
     else: 
-        print("Usage:", sys.argv[0], "filename")
+        print("Usage: python3 ", sys.argv[0], " <filename>")
