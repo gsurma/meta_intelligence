@@ -18,7 +18,7 @@ AVAILABLE_OPS = [">", # Increment the pointer.
 				 #"," #Input a byte and store it in the byte at the pointer.
 
 POPULATION = 100
-MUTATION_RATE = 0.05
+MUTATION_RATE = 0.115
 SELECTION_RATE = 0.9
 TOP_PERFORMERS_COUNT = int(POPULATION * SELECTION_RATE)
 PROGRAM_LENGTH_LOWER_BOUND = 10

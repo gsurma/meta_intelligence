@@ -10,3 +10,5 @@ http://www.primaryobjects.com/2013/01/27/using-artificial-intelligence-to-write-
 FOUND SOLUTION: +++++++++++++++++++++++++++++++++. for: '!' and in: 5 minutes
 
 FOUND SOLUTION: ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++.+. for: 'HI'  in: 27 minutes
+
+FOUND SOLUTION: +++++-+++[>+++++++<-]>-+.+.+. for: '123' in: 20 minutes
