@@ -1,4 +1,4 @@
-import brainfuck2 as brainfuck
+import brainfuck
 import random
 import copy
 import numpy as np
@@ -19,12 +19,12 @@ AVAILABLE_OPS = [">", # Increment the pointer.
 
 POPULATION = 100
 MUTATION_RATE = 0.115
-SELECTION_RATE = 0.9
+MAX_MUTATION_ATTEMPTS = 500
+SELECTION_RATE = 0.85
 TOP_PERFORMERS_COUNT = int(POPULATION * SELECTION_RATE)
 PROGRAM_LENGTH_LOWER_BOUND = 10
 PROGRAM_LENGTH_UPPER_BOUND = 100
-MAX_MUTATION_ATTEMPTS = 500
-
+OUTPUT_DIR = "./output/"
 
 class GeneticEvolutionMetaProgrammer():
 
@@ -39,12 +39,6 @@ class GeneticEvolutionMetaProgrammer():
 		self.target = target
 		self.max_fitness_score = len(self.target)*ASCII_CHARS_COUNT
 		self.start_time = time.time()
-
-		# ----[-->+++<]>-.----------. yo
-		chromosome = "+[----->+++<]>+.+." #hi
-		# #chromosome = "+[----->+++<]>+.---.+++++++..+++.[--->+<]>-----.--[->++++<]>-.--------.+++.------.--------.[->+++<]>.------------.++++[->++<]>+.-[->++++<]>.[->+++<]>+.++++++++++++.[->+++++<]>-.[->+++<]>+.-[->+++<]>.--[->++++<]>--.+[->+++<]>.+++++++++++++.+++++++.-[---->+<]>++.+[->+++<]>.++++++++++++.--.+++.----.-------.[--->+<]>+.[---->+<]>++.[-->+++++++<]>.++.---.--------.+++++++++++.+++[->+++<]>++.++++++++++++."
-		result = brainfuck.evaluate(chromosome)
-		print(repr(result))
 
 		print("Started looking for: " + repr(target))
 		self.genetic_evolution()
@@ -201,7 +195,7 @@ class GeneticEvolutionMetaProgrammer():
 		plt.title("Target: " + repr(self.target))
 		plt.xlabel("Generation")
 		plt.ylabel("Fitness")
-		plt.savefig("assets/" + repr(self.target) + ".png", bbox_inches="tight")
+		plt.savefig(OUTPUT_DIR + repr(self.target) + ".png", bbox_inches="tight")
 		plt.close()
 
 	def softmax(self, x):

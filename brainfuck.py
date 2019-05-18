@@ -1,120 +1,121 @@
-#!/usr/bin/python
-
-# > 	Increment the pointer.
-# < 	Decrement the pointer.
-# + 	Increment the byte at the pointer.
-# - 	Decrement the byte at the pointer.
-# . 	Output the byte at the pointer.
-# , 	Input a byte and store it in the byte at the pointer.
-# [ 	Jump forward past the matching ] if the byte at the pointer is zero.
-# ] 	Jump backward to the matching [ unless the byte at the pointer is zero.
-
-#
-# Brainfuck Interpreter
-#
 
 import sys
 
-OPERATIONS_LIMIT = 1000 # Necessary to prevent halting
-CELLS = 30000
-
+OPERATIONS_LIMIT = 10000 # necessary to prevent halting
 
 def execute(filename):
-	f = open(filename, "r")
-	evaluate(f.read())
-	f.close()
+    f = open(filename, "r")
+    result = evaluate(f.read())
+    print(result)
+    f.close()
 
 def evaluate(code):
-	code = cleanup(list(code))
-	bracemap = build_bracemap(code)
+    code = cleanup(code)
+    return run(code)
 
-	cells, codeptr, cellptr = [0], 0, 0
-	result = ""
-	operations = 0
-
-	if bracemap is None:
-		return None
-
-	while codeptr < len(code):
-		if operations >= OPERATIONS_LIMIT:
-			return None
-		command = code[codeptr]
-
-		if command == ">":
-			cellptr += 1
-			if len(cells) <= cellptr:
-				cells.append(0)
-			# if cellptr == len(cells):
-		 #   		cells.append(0)
-
-		if command == "<":
-			cellptr = 0 if cellptr <= 0 else cellptr - 1
-
-		# if command == "+":
-		# 	cells[cellptr] = cells[cellptr] + 1 if cells[cellptr] < CELLS else 0
-
-		# if command == "-":
-		# 	cells[cellptr] = cells[cellptr] - 1 if cells[cellptr] > 0 else CELLS
-
-		if command == "+":
-			cells[cellptr] = cells[cellptr] + 1 
-
-		if command == "-":
-			cells[cellptr] = cells[cellptr] - 1 if cells[cellptr] > 0 else 0
-
-		if command == "[" and cells[cellptr] == 0:
-			if codeptr not in bracemap:
-				return None
-			else:
-				codeptr = bracemap[codeptr]
-
-		if command == "]" and cells[cellptr] != 0:
-			if codeptr not in bracemap:
-				return None
-			else:
-				codeptr = bracemap[codeptr]
-
-		if command == ".":
-			result += chr(cells[cellptr])
-
-		if command == ",":
-			return None # we don't accept additional inputs, let's skip
-
-		codeptr += 1
-		operations += 1
-	return result
+def set_cell_value(value, cells, cell_ptr):
+    cells[cell_ptr] += value
+    if cells[cell_ptr] > 255:
+        cells[cell_ptr] = 0
+    elif cells[cell_ptr] < 0:
+        cells[cell_ptr] = 255
+    return cells, cell_ptr
 
 def cleanup(code):
-	return ''.join(filter(lambda x: x in ['.', ',', '[', ']', '<', '>', '+', '-'], code))
+    return ''.join(filter(lambda x: x in ['.', ',', '[', ']', '<', '>', '+', '-'], code))
 
-def build_bracemap(code):
-	temp_bracestack, bracemap = [], {}
-	braces_count = 0
-	for position, command in enumerate(code):
-		if command == "[":
-			braces_count += 1
-			temp_bracestack.append(position)
-		if command == "]":
-			braces_count += 1
-			if len(temp_bracestack) > 0:
-				start = temp_bracestack.pop()
-				bracemap[start] = position
-				bracemap[position] = start
-			else:
-				return None
-	# print(bracemap)
-	# print(braces_count)
-	# TODO: fix
-	#https://gist.github.com/unnikked/cfad836abd9e4619a1b1
-	#https://github.com/praharshjain/brainfuck-interpreter/blob/master/brainfuck_interpreter.py
-	#https://codereview.stackexchange.com/questions/134578/a-brainfuck-interpreter-in-python-3
-	if braces_count != len(bracemap):
-		return None
-	return bracemap
+def is_index_in_collection(index, collection):
+    return True if index < len(collection) and index >= 0 else False
 
-if __name__ == "__main__":
-	if len(sys.argv) == 2:
-		execute(sys.argv[1])
-	else: 
-		print("Usage:", sys.argv[0], "filename")
+def pair_brackets(code):
+    open_bracket_indexes = []
+    close_bracket_indexes = []
+    stack = []
+    open_brackets = 0
+    close_brackets = 0
+    for index, command in enumerate(code):
+        if command == '[':
+            open_brackets += 1
+            stack.append(index)
+        elif command == ']':
+            close_brackets += 1
+            if len(stack) > 0:
+                open_bracket_indexes.append(stack.pop())
+                close_bracket_indexes.append(index)
+            else:
+                return None
+    if open_brackets != close_brackets:
+        return None
+    return open_bracket_indexes, close_bracket_indexes
 
+def run(code):
+    operations = 0
+    cells = [0]
+    cell_ptr = 0
+    src_ptr = 0
+    result = ""
+
+    brackets = pair_brackets(code)
+    if not brackets:
+        #print("No brackets")
+        return None
+    open_bracket_indexes = brackets[0]
+    close_bracket_indexes = brackets[1]
+
+    while src_ptr < len(code):
+        if operations >= OPERATIONS_LIMIT:
+            #print("halt!")
+            return None
+
+        command = code[src_ptr]
+
+        if command == '+':
+            if not is_index_in_collection(cell_ptr, cells):
+                #print("cell_ptr not in cells for +")
+                return None 
+            cells, cell_ptr = set_cell_value(1, cells, cell_ptr)
+
+        elif command == '-':
+            if not is_index_in_collection(cell_ptr, cells):
+                #print("cell_ptr not in cells for -")
+                return None
+            cells, cell_ptr = set_cell_value(-1, cells, cell_ptr)
+
+        elif command == '<':
+            cell_ptr -= 1
+
+        elif command == '>':
+            cell_ptr += 1
+            if cell_ptr > len(cells)-1:
+                cells.append(0)
+
+        elif command == '[' or command == ']':
+            if not is_index_in_collection(cell_ptr, cells):
+                #print("cell_ptr not in cells for [ or ]")
+                return None
+            if command == '[' and cells[cell_ptr] == 0:
+                index = open_bracket_indexes.index(src_ptr)
+                src_ptr =  close_bracket_indexes[index]
+            elif command == ']' and cells[cell_ptr] != 0:
+                index = close_bracket_indexes.index(src_ptr)
+                src_ptr = open_bracket_indexes[index]
+
+        elif command == ',':
+            return None # No inputs as for now
+
+        elif command == '.':
+            if not is_index_in_collection(cell_ptr, cells):
+                #print("cell_ptr not in cells for .")
+                return None
+            new_char = chr(cells[cell_ptr])
+            result += new_char
+
+        src_ptr += 1
+        operations += 1
+    return result
+
+if __name__ == '__main__':
+    if len(sys.argv) == 2:
+        execute(sys.argv[1])
+    else: 
+        print("Usage: python3 ", sys.argv[0], " <filename>")
