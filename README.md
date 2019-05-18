@@ -1,5 +1,5 @@
 <h3 align="center">
-  <img src="assets/face_generator_icon_web.png" width="300">
+  <img src="assets/meta_intelligence_icon_web.png" width="300">
 </h3>
 
 # Meta Intelligence
