@@ -46,13 +46,13 @@ Our goal is to generate a brainfuck program that outputs a given target string. 
 
 	FOUND SOLUTION: +++++++++++++++++++++++++++++++++. for: '!' in: 5 minutes
 
---
+---
 	
 <img src="output/'HI'.png">
 	
 	FOUND SOLUTION: ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++.+. for: 'HI'  in: 27 minutes
 
---
+---
 <img src="output/'123'.png">
 	
 	FOUND SOLUTION: +++++-+++[>+++++++<-]>-+.+.+. for: '123' in: 20 minutes
