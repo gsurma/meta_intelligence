@@ -1,4 +1,4 @@
-import brainfuck
+import brainfuck_interpreter as brainfuck
 import random
 import copy
 import numpy as np
@@ -15,12 +15,13 @@ AVAILABLE_OPS = [">", # Increment the pointer.
  				 ".", # Output the byte at the pointer.
  				 "[", # Jump forward past the matching ] if the byte at the pointer is zero.
  				 "]"] # Jump backward to the matching [ unless the byte at the pointer is zero.
-				 #"," #Input a byte and store it in the byte at the pointer.
+				 #"," #Input a byte and store it in the byte at the pointer. (Since we don't want any inputs, let's skip it as for now)
+
 
 POPULATION = 100
 MUTATION_RATE = 0.115
 MAX_MUTATION_ATTEMPTS = 500
-SELECTION_RATE = 0.85
+SELECTION_RATE = 0.95
 TOP_PERFORMERS_COUNT = int(POPULATION * SELECTION_RATE)
 PROGRAM_LENGTH_LOWER_BOUND = 10
 PROGRAM_LENGTH_UPPER_BOUND = 100
@@ -77,6 +78,8 @@ class GeneticEvolutionMetaProgrammer():
 			for i in range(0, length):
 				chromosome += random.choice(AVAILABLE_OPS)
 			if brainfuck.evaluate(chromosome) is not None: # We don't want programs that are syntactically incorrect
+				print(chromosome)
+				exit()
 				population.append(chromosome)
 		return population
 
