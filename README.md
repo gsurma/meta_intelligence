@@ -37,7 +37,7 @@ Our goal is to generate a brainfuck program that outputs a given target string. 
 	POPULATION = 100
 	MUTATION_RATE = 0.115
 	MAX_MUTATION_ATTEMPTS = 500
-	SELECTION_RATE = 0.95
+	SELECTION_RATE = 0.9
 	PROGRAM_LENGTH_LOWER_BOUND = 10
 	PROGRAM_LENGTH_UPPER_BOUND = 100
 
