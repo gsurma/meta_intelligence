@@ -32,7 +32,7 @@ Our goal is to generate a brainfuck program that outputs a given target string. 
 3. Finally we are going to perform **mutation**. Some programs after mutation are invalid so we are going to replace them with the randmom valid ones to keep the population constant in size.
 4. We are going to repeat steps 1-3 until we find the target string.
 
-**Hyperparameters:**
+#### Hyperparameters
 
 	POPULATION = 100
 	MUTATION_RATE = 0.115
