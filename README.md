@@ -6,6 +6,9 @@
 
 AI research environment for artificial code generation ([metaprogramming](https://en.wikipedia.org/wiki/Metaprogramming)).
 
+
+Check out corresponding Medium article: [Meta Intelligence - Writing Programs That Write Programs (Part 1: Genetic Evolution)](https://towardsdatascience.com/meta-intelligence-writing-programs-that-write-programs-part-1-genetic-evolution-679b65c37c5f)
+
 ## About
 **Given an esoteric and minimalistic, though [Turing complete](https://en.wikipedia.org/wiki/Turing_completeness) programming language [Brainfuck](https://en.wikipedia.org/wiki/Brainfuck), we aim to artificially generate programs that perform specific tasks.**
 
