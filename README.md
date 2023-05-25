@@ -9,7 +9,9 @@ AI research environment for artificial code generation ([metaprogramming](https:
 ## About
 **Given an esoteric and minimalistic, though [Turing complete](https://en.wikipedia.org/wiki/Turing_completeness) programming language [Brainfuck](https://en.wikipedia.org/wiki/Brainfuck), we aim to artificially generate programs that perform specific tasks.**
 
+
 Brainfuck has only 8 instructions making it very easy to read for computers (check python interpreter `brainfuck_interpreter.py`) but on the other hand, very hard to understand for humans, thus the name.
+
 
 	">" Increment the pointer.
 	"<" Decrement the pointer.

@@ -78,8 +78,6 @@ class GeneticEvolutionMetaProgrammer():
 			for i in range(0, length):
 				chromosome += random.choice(AVAILABLE_OPS)
 			if brainfuck.evaluate(chromosome) is not None: # We don't want programs that are syntactically incorrect
-				print(chromosome)
-				exit()
 				population.append(chromosome)
 		return population
 
