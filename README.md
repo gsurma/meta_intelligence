@@ -6,6 +6,9 @@
 
 AI research environment for artificial code generation ([metaprogramming](https://en.wikipedia.org/wiki/Metaprogramming)).
 
+
+Check out corresponding Medium article: [Meta Intelligence - Writing Programs That Write Programs (Part 1: Genetic Evolution)](https://towardsdatascience.com/meta-intelligence-writing-programs-that-write-programs-part-1-genetic-evolution-679b65c37c5f)
+
 ## About
 **Given an esoteric and minimalistic, though [Turing complete](https://en.wikipedia.org/wiki/Turing_completeness) programming language [Brainfuck](https://en.wikipedia.org/wiki/Brainfuck), we aim to artificially generate programs that perform specific tasks.**
 
@@ -31,7 +34,7 @@ Our goal is to generate a brainfuck program that outputs a given target string. 
 0. We are going to start with a **population of random chromosomes** where every chromosome will be a brainfuck program represented as a string of random instructions. Example chromosome: `[->+]+.-><>+`. Keep in mind that the vast majority of randomly generated programs will be syntactically incorrect so we need to validate them with interpreter before adding to the population.
 1. Then we are going to proceed to the **selection** phase where we are going to pick top performing programs. Programs are evaluated with a fitness function that calculates score for every character with the following function: `fitness_score += ASCII_CHARS_COUNT-abs(input_score-target_score)` which is basically calculating the distance from the given character to the desired one on the ASCII table. The closer we are to the target character. The bigger the score, the closer we are to our target with `ASCII_CHARS_COUNT` as a max per character. Maximum fitness score per chromosome is calculated as `len(self.target)*ASCII_CHARS_COUNT`.
 2. Next we are going to **pair chromosomes** with roulette selection and perform a **crossover**.
-3. Finally we are going to perform **mutation**. Some programs after mutation are invalid so we are going to replace them with the randmom valid ones to keep the population constant in size.
+3. Finally we are going to perform **mutation**. Some programs after mutation are invalid so we are going to replace them with the random valid ones to keep the population constant in size.
 4. We are going to repeat steps 1-3 until we find the target string.
 
 #### Hyperparameters
@@ -62,3 +65,14 @@ Our goal is to generate a brainfuck program that outputs a given target string. 
 
 ### Reinforcement Learning
 Coming soon!
+
+## Author
+
+**Greg (Grzegorz) Surma**
+
+[**PORTFOLIO**](https://gsurma.github.io)
+
+[**GITHUB**](https://github.com/gsurma)
+
+[**BLOG**](https://medium.com/@gsurma)
+
